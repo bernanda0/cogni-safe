@@ -1,38 +1,11 @@
 #define ESP_DRD_USE_SPIFFS true
 
-// ----------------------------
-// Standard Libraries - Already Installed if you have ESP32 set up
-// ----------------------------
-
 #include <WiFi.h>
 #include <FS.h>
 #include <SPIFFS.h>
-
-// ----------------------------
-// Additional Libraries - each one of these will need to be installed.
-// ----------------------------
-
 #include <WiFiManager.h>
-// Captive portal for configuring the WiFi
-
-// Can be installed from the library manager (Search for "WifiManager", install the Alhpa version)
-// https://github.com/tzapu/WiFiManager
-
 #include <ESP_DoubleResetDetector.h>
-// A library for checking if the reset button has been pressed twice
-// Can be used to enable config mode
-// Can be installed from the library manager (Search for "ESP_DoubleResetDetector")
-//https://github.com/khoih-prog/ESP_DoubleResetDetector
-
 #include <ArduinoJson.h>
-// ArduinoJson is used for parsing and creating the config file.
-// Search for "Arduino Json" in the Arduino Library manager
-// https://github.com/bblanchon/ArduinoJson
-
-// -------------------------------------
-// -------   Other Config   ------
-// -------------------------------------
-
 #include <Wire.h>
 #include <MPU6050.h>
 #define BUZZER_PIN 14
@@ -42,20 +15,11 @@
 #include "time.h"
 
 const int PIN_LED = 2;
-
 #define JSON_CONFIG_FILE "/sample_config.json"
 
-// Number of seconds after reset during which a
-// subseqent reset will be considered a double reset.
 #define DRD_TIMEOUT 10
 
-// RTC Memory Address for the DoubleResetDetector to use
 #define DRD_ADDRESS 0
-
-// -----------------------------
-
-// -----------------------------
-
 DoubleResetDetector *drd;
 
 //flag for saving data
