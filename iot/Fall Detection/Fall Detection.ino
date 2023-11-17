@@ -241,7 +241,7 @@ void loop()
         }
       }
 
-      
+  }
   // Check for double press
-
+  }
 }
