@@ -1,12 +1,12 @@
 package handlers
 
 import (
-	"br/simple-service/db/sqlc"
-	"br/simple-service/token"
 	"log"
 	"net/http"
 	"time"
 
+	"cognisafe.com/b/db/sqlc"
+	"cognisafe.com/b/token"
 	"github.com/google/uuid"
 )
 
