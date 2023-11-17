@@ -81,28 +81,9 @@ String urlEncode(const char* str) {
   return encodedStr;
 }
 
-void printLocalTime(){
-  struct tm timeinfo;
-  if(!getLocalTime(&timeinfo)){
-    Serial.println("Failed to obtain time");
-    return;
-  }
-  
-  // Print only the current day and time
-  
-  strftime(dateTimeStr, sizeof(dateTimeStr), "%A, %B %d %Y %H:%M:%S", &timeinfo);
-}
 
 
-void IRAM_ATTR isr() {
-  button_time = millis();
-  if (button_time - last_button_time > 250){
-    button1.numberKeyPresses++;
-    button1.pressed = true;
-    last_button_time = button_time;
-    buttonInterrupted = true; // Set the flag to indicate button press
-  }
-}
+
 
 void saveConfigFile()
 {
@@ -125,61 +106,6 @@ void saveConfigFile()
   }
   configFile.close();
 }
-
-bool loadConfigFile()
-{
-  //clean FS, for testing
-  // SPIFFS.format();
-
-  //read configuration from FS json
-  Serial.println("mounting FS...");
-
-  // May need to make it begin(true) first time you are using SPIFFS
-  // NOTE: This might not be a good way to do this! begin(true) reformats the spiffs
-  // it will only get called if it fails to mount, which probably means it needs to be
-  // formatted, but maybe dont use this if you have something important saved on spiffs
-  // that can't be replaced.
-  if (SPIFFS.begin(false) || SPIFFS.begin(true))
-  {
-    Serial.println("mounted file system");
-    if (SPIFFS.exists(JSON_CONFIG_FILE))
-    {
-      //file exists, reading and loading
-      Serial.println("reading config file");
-      File configFile = SPIFFS.open(JSON_CONFIG_FILE, "r");
-      if (configFile)
-      {
-        Serial.println("opened config file");
-        StaticJsonDocument<512> json;
-        DeserializationError error = deserializeJson(json, configFile);
-        serializeJsonPretty(json, Serial);
-        if (!error)
-        {
-          Serial.println("\nparsed json");
-
-          strcpy(testString, json["testString"]);
-          testNumber = json["testNumber"].as<unsigned long long>(); // Correctly read the testNumber
-          apikey = json["apikey"].as<int>(); // Correctly read the apikey
-
-          return true;
-        }
-        else
-        {
-          Serial.println("failed to load json config");
-        }
-      }
-    }
-  }
-  else
-  {
-    Serial.println("failed to mount FS");
-  }
-  //end read
-  return false;
-}
-
-
-
 
 
 //callback notifying us of the need to save config
@@ -220,67 +146,7 @@ void setup()
 
   bool forceConfig = false;
 
-  drd = new DoubleResetDetector(DRD_TIMEOUT, DRD_ADDRESS);
-  if (drd->detectDoubleReset())
-  {
-    Serial.println(F("Forcing config mode as there was a Double reset detected"));
-    forceConfig = true;
-  }
 
-  bool spiffsSetup = loadConfigFile();
-  if (!spiffsSetup) {
-    Serial.println(F("Forcing config mode as there is no saved config"));
-    forceConfig = true;
-  }
-
-  //WiFi.disconnect();
-  WiFi.mode(WIFI_STA); // explicitly set mode, esp defaults to STA+AP
-  Serial.begin(115200);
-  delay(10);
-
-  // wm.resetSettings(); // wipe settings
-
-  const char *configInfoText = "<div style='margin-bottom: 20px;'>Ask your emergency contact to open scan this QR <a href='https://i.ibb.co/rMzYN3z/callmebot-qr.png'>here</a> and provide their API key.</div>";
-
-  // Text to be displayed below the parameters
-  const char *configInfoTextBottom = "<div style='margin-top: 20px;'>More configuration options can be added here...</div>";
-
-  WiFiManager wm;
-  wm.setSaveConfigCallback(saveConfigCallback);
-  //set callback that gets called when connecting to previous WiFi fails, and enters Access Point mode
-  wm.setAPCallback(configModeCallback);
-
-  // Add the text above the parameters
-  WiFiManagerParameter config_info_top(configInfoText);
-  wm.addParameter(&config_info_top);
-
-  // --- additional Configs params ---
-
-  // Text box (String)
-  WiFiManagerParameter custom_text_box("key_text", "Enter your Name", testString, 50); // 50 == max length
-
-  // Text box (Number)
-  sprintf(testNumberStr, "%llu", testNumber); // Convert the testNumber to a string
-  WiFiManagerParameter custom_text_box_num("key_num", "Enter Emergency Contact's number", testNumberStr, 12); // 12 == max length
-
-  // Text box (API Key)
-  char convertedValueApi[7];
-  sprintf(convertedValueApi, "%d", apikey); // Need to convert to a string to display a default value.
-  WiFiManagerParameter custom_text_box_api("key_api", "Enter Emergency contact's API key", convertedValueApi, 7); // 7 == max length
-
-
-  // Add all your parameters here
-  wm.addParameter(&custom_text_box);
-  wm.addParameter(&custom_text_box_num);
-  wm.addParameter(&custom_text_box_api);
-
-  // Add the text below the parameters
-  WiFiManagerParameter config_info_bottom(configInfoTextBottom);
-  wm.addParameter(&config_info_bottom);
-  Serial.println("hello");
-
-  digitalWrite(PIN_LED, LOW);
-  if (forceConfig)
   {
     if (!wm.startConfigPortal("Fall_detector", "clock123"))
     {
@@ -306,37 +172,7 @@ void setup()
   // If we get here, we are connected to the WiFi
   WiFi.config(staticIP, gateway, subnet, dns);
 
-  configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
-  printLocalTime();
-  digitalWrite(PIN_LED, HIGH);
 
-  Serial.println("");
-  Serial.println("WiFi connected");
-  Serial.println("IP address: ");
-  Serial.println(WiFi.localIP());
-
-  // Lets deal with the user config values
-
-  // Copy the string value
-  strncpy(testString, custom_text_box.getValue(), sizeof(testString));
-  Serial.print("testString: ");
-  Serial.println(testString);
-
-  //Convert the number value
-  testNumber = strtoull(custom_text_box_num.getValue(), nullptr, 10);
-  sprintf(testNumberStr, "%llu", strtoull(custom_text_box_num.getValue(), nullptr, 10));
-  Serial.print("testNumber: ");
-  Serial.println(testNumberStr);
-
-  apikey = atoi(custom_text_box_api.getValue());
-  Serial.print("apikey: ");
-  Serial.println(apikey);
-
-  //save the custom parameters to FS
-  if (shouldSaveConfig)
-  {
-    saveConfigFile();
-  }
 }
 
 // ... Rest of the code ...
@@ -345,7 +181,7 @@ void loop()
 {
   drd->loop();
   printLocalTime();
-  HTTPClient http;
+
   char encodedDateTimeStr[50];
   String encodedDateTime = urlEncode(dateTimeStr);
 
