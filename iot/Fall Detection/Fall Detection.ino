@@ -441,64 +441,7 @@ void loop()
         }
       }
 
-      if (!buttonInterrupted) {
-      // No interrupt button press, send the HTTP request
-      int httpResponseCode = http.GET();
-      if (httpResponseCode > 0) {
-        Serial.println("Alert message sent successfully!");
-        Serial.print("HTTP Response code: ");
-        Serial.println(httpResponseCode);
-        String payload = http.getString();
-        Serial.println(payload);
-        // Update last fall detection status and time
-        lastFallDetection = true;
-        lastFallTime = millis();
-        } else {
-          Serial.print("Error code: ");
-          Serial.println(httpResponseCode);
-        }
-        // Free resources
-        http.end();
-        //ledcWrite(BUZZER_CHANNEL, 0);
-      }
-      delayStartTime = 0;
-    }
-    if (button1.pressed)
-    {
-      if (delayStartTime > 0)
-      {
-        delayStartTime = 0;
-      }
-      Serial.printf("Stop Button was pressed %u times\n", button1.numberKeyPresses);
-      button1.pressed = false;
-      ledcWrite(BUZZER_CHANNEL, 0); // Stop the tone
-    }
-  }
+      
   // Check for double press
-  if (button1.numberKeyPresses >= 2 && (millis() - button_time) <= DOUBLE_PRESS_THRESHOLD) {
-    Serial.println("Double press detected!");
-    if (lastFallDetection) {
-      // Send the HTTP request with the safe message
-      String safeMessage = "Last+fall+detection+was+false%2C+user:+%22" + String(testString) + "%22+is+safe";
-      String serverPath = serverName + "phone=" + String(testNumberStr) + "&apikey=" + String(apikey) + "&text=" + safeMessage;
-      http.begin(serverPath.c_str());
-      int httpResponseCode = http.GET();
-      if (httpResponseCode > 0) {
-        Serial.println("Safe message sent successfully!");
-        Serial.print("HTTP Response code: ");
-        Serial.println(httpResponseCode);
-        String payload = http.getString();
-        Serial.println(payload);
-      } else {
-        Serial.print("Error code: ");
-        Serial.println(httpResponseCode);
-      }
-      http.end();
-      lastFallDetection = false;
-    } else {
-      Serial.println("No previous fall detection to send safe message.");
-    }
-    // Reset the button press counter
-    button1.numberKeyPresses = 0;
-  }
+
 }
