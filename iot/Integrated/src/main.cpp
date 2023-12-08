@@ -33,7 +33,7 @@ const char* topic = "greeting";
 
 // Initialize MPU6050
 void initMPU6050() {
-  Wire.begin(22, 23); // SDA to GPIO 22, SCL to GPIO 3
+  Wire.begin(22, 23); // SDA to GPIO 22, SCL to GPIO 23
   mpu.initialize();
 }
 
@@ -113,17 +113,17 @@ void setup() {
   initMPU6050();
   pinMode(BUZZER_PIN, OUTPUT);
   pinMode(PIN_LED, OUTPUT);
-  setup_wifi();
-  client.setServer(mqtt_server, mqtt_port);
+  // setup_wifi();
+  // client.setServer(mqtt_server, mqtt_port);
 }
 
 int counter = 0;
 
 void loop() {
-  if (!client.connected()) {
-    reconnect();
-  }
-  client.loop();
+  // if (!client.connected()) {
+  //   reconnect();
+  // }
+  // client.loop();
 
   // Detect fall and gas
   bool isFallDetected = detectFall();
@@ -132,7 +132,7 @@ void loop() {
   // Publish the status of fall detection and gas sensor value to the topic
   char message[50];
   sprintf(message, "Fall: %s, Gas: %d", isFallDetected ? "Detected" : "Not Detected", gasSensorValue);
-  client.publish(topic, message);
+  // client.publish(topic, message);
 
   // Print information to Serial monitor
   Serial.print("Fall: ");
